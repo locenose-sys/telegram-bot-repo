@@ -10,7 +10,8 @@ CHAT_ID = os.getenv('CHAT_ID', '@noselovea')  # Public group username
 files = [
     'dishapatani_501003465_18520526083013912_2698487590039069318_n-2025-05-6e3beacfff0adfdf9b1b55ab38b2403b.jpg',
     'photo_2025-03-19_13-22-00.jpg',
-    'video_2025-01-16_14-32-37.mp4'
+    'video_2025-01-16_14-32-37.mp4',
+    'IMG_20230901_231855_591-01.jpeg'
 ]
 
 def send_file(file_path):
