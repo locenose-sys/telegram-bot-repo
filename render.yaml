@@ -9,3 +9,7 @@ services:
         value: 8361902202:AAH8KJW9_6ixm140bRmwY1Jz52kwHns-GqM
       - key: CHAT_ID
         value: '@noselovea'
+      - key: MEGA_EMAIL
+        value: locenose@gmail.com
+      - key: MEGA_PASSWORD
+        value: mathers7890@

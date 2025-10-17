@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot File Uploader</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .upload-area { border: 2px dashed #ccc; padding: 20px; text-align: center; margin: 20px 0; }
+        .upload-area.dragover { border-color: #007bff; background-color: #f8f9fa; }
+        #fileInput { display: none; }
+        #fileList { margin-top: 20px; }
+        .file-item { display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <h1>Upload Files for Telegram Bot</h1>
+    <p>Files will be sent every 10 minutes to the group.</p>
+
+    <div class="upload-area" id="uploadArea">
+        <p>Drag and drop files here or <label for="fileInput" style="color: #007bff; cursor: pointer;">click to select</label></p>
+        <input type="file" id="fileInput" multiple accept="image/*,video/*,.gif,.webp,.pdf,.doc,.docx">
+    </div>
+
+    <button id="uploadBtn">Upload Selected Files</button>
+
+    <h2>Uploaded Files (to be sent in 10 mins)</h2>
+    <div id="fileList"></div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileList = document.getElementById('fileList');
+        let selectedFiles = [];
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            selectedFiles = Array.from(e.dataTransfer.files);
+            displayFiles();
+        });
+
+        fileInput.addEventListener('change', () => {
+            selectedFiles = Array.from(fileInput.files);
+            displayFiles();
+        });
+
+        uploadBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return alert('No files selected');
+            const formData = new FormData();
+            selectedFiles.forEach(file => formData.append('files', file));
+            const response = await fetch('/upload', { method: 'POST', body: formData });
+            if (response.ok) {
+                alert('Files uploaded!');
+                loadFileList();
+                selectedFiles = [];
+                displayFiles();
+            } else {
+                alert('Upload failed');
+            }
+        });
+
+        function displayFiles() {
+            uploadArea.innerHTML = selectedFiles.length ? `<p>${selectedFiles.length} file(s) selected</p>` : '<p>Drag and drop files here or <label for="fileInput" style="color: #007bff; cursor: pointer;">click to select</label></p><input type="file" id="fileInput" multiple accept="image/*,video/*,.gif,.webp,.pdf,.doc,.docx">';
+        }
+
+        async function loadFileList() {
+            const response = await fetch('/files');
+            const files = await response.json();
+            fileList.innerHTML = files.map(file => `<div class="file-item">${file} <span>Will send in 10 mins</span></div>`).join('');
+        }
+
+        loadFileList();
+    </script>
+</body>
+</html>
