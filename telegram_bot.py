@@ -23,10 +23,27 @@ def send_file(file_path):
         print(f"File {file_path} not found.")
         return
 
-    url = f'https://api.telegram.org/bot{TOKEN}/sendDocument'  # Use sendDocument for files
+    ext = os.path.splitext(file_path)[1].lower()
     with open(file_path, 'rb') as f:
-        files_data = {'document': f}
         data = {'chat_id': CHAT_ID}
+        files_data = {}
+
+        if ext in ['.jpg', '.jpeg', '.png', '.gif']:
+            url = f'https://api.telegram.org/bot{TOKEN}/sendPhoto'
+            files_data = {'photo': f}
+        elif ext in ['.mp4', '.avi', '.mov']:
+            url = f'https://api.telegram.org/bot{TOKEN}/sendVideo'
+            files_data = {'video': f}
+        elif ext == '.gif':
+            url = f'https://api.telegram.org/bot{TOKEN}/sendAnimation'
+            files_data = {'animation': f}
+        elif ext == '.webp':
+            url = f'https://api.telegram.org/bot{TOKEN}/sendSticker'
+            files_data = {'sticker': f}
+        else:
+            url = f'https://api.telegram.org/bot{TOKEN}/sendDocument'
+            files_data = {'document': f}
+
         response = requests.post(url, data=data, files=files_data)
         print(response.json())
 
