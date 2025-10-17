@@ -1,6 +1,10 @@
 import requests
 import time
 import os
+import threading
+from flask import Flask
+
+app = Flask(__name__)
 
 # Bot token and chat ID
 TOKEN = os.getenv('TOKEN', '8361902202:AAH8KJW9_6ixm140bRmwY1Jz52kwHns-GqM')
@@ -26,7 +30,7 @@ def send_file(file_path):
         response = requests.post(url, data=data, files=files_data)
         print(response.json())
 
-def main():
+def bot_loop():
     index = 0
     while True:
         if index >= len(files):
@@ -35,5 +39,12 @@ def main():
         index += 1
         time.sleep(600)  # 10 minutes
 
+@app.route('/')
+def home():
+    return "Bot is running!"
+
 if __name__ == '__main__':
-    main()
+    # Start bot in a thread
+    threading.Thread(target=bot_loop, daemon=True).start()
+    # Run Flask app
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
