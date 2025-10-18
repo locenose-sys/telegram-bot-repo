@@ -11,12 +11,12 @@ app = Flask(__name__)
 TOKEN = os.getenv('TOKEN', '8361902202:AAH8KJW9_6ixm140bRmwY1Jz52kwHns-GqM')
 CHAT_ID = os.getenv('CHAT_ID', '@noselovea')  # Public group username
 
-# List of files to send with timestamps
+# List of files to send with timestamps and sent status
 files = [
-    {'name': 'dishapatani_501003465_18520526083013912_2698487590039069318_n-2025-05-6e3beacfff0adfdf9b1b55ab38b2403b.jpg', 'timestamp': datetime.now()},
-    {'name': 'photo_2025-03-19_13-22-00.jpg', 'timestamp': datetime.now()},
-    {'name': 'video_2025-01-16_14-32-37.mp4', 'timestamp': datetime.now()},
-    {'name': 'IMG_20230901_231855_591-01.jpeg', 'timestamp': datetime.now()}
+    {'name': 'dishapatani_501003465_18520526083013912_2698487590039069318_n-2025-05-6e3beacfff0adfdf9b1b55ab38b2403b.jpg', 'timestamp': datetime.now(), 'sent': False},
+    {'name': 'photo_2025-03-19_13-22-00.jpg', 'timestamp': datetime.now(), 'sent': False},
+    {'name': 'video_2025-01-16_14-32-37.mp4', 'timestamp': datetime.now(), 'sent': False},
+    {'name': 'IMG_20230901_231855_591-01.jpeg', 'timestamp': datetime.now(), 'sent': False}
 ]
 
 def send_file(file_item):
@@ -26,6 +26,7 @@ def send_file(file_item):
         data = {'chat_id': CHAT_ID, 'text': file_path}
         response = requests.post(url, data=data)
         print(response.json())
+        file_item['sent'] = True
         return
 
     if not os.path.exists(file_path):
@@ -55,6 +56,7 @@ def send_file(file_item):
 
         response = requests.post(url, data=data, files=files_data)
         print(response.json())
+        file_item['sent'] = True
 
 def clean_old_files():
     global files
@@ -70,7 +72,7 @@ def bot_loop():
     while True:
         if index >= len(files):
             index = 0  # Loop back to start
-        if files:
+        if files and not files[index]['sent']:
             send_file(files[index])
             index += 1
         clean_old_files()
@@ -82,7 +84,7 @@ def home():
 
 @app.route('/files')
 def get_files():
-    return jsonify([f['name'] for f in files])
+    return jsonify([{'name': f['name'], 'sent': f['sent'], 'timestamp': f['timestamp'].isoformat()} for f in files])
 
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -92,7 +94,15 @@ def upload():
             filename = file.filename
             file_path = os.path.join('.', filename)
             file.save(file_path)
-            files.append({'name': filename, 'timestamp': datetime.now()})
+            files.append({'name': filename, 'timestamp': datetime.now(), 'sent': False})
+    return '', 204
+
+@app.route('/delete/<filename>', methods=['DELETE'])
+def delete_file(filename):
+    global files
+    files = [f for f in files if f['name'] != filename]
+    if os.path.exists(filename):
+        os.remove(filename)
     return '', 204
 
 if __name__ == '__main__':
